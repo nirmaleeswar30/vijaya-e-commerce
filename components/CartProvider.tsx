@@ -1,22 +1,20 @@
 // components/CartProvider.tsx
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { type Product } from './ProductCard';
 
-export interface CartItem {
-    id: string;
-    name: string;
-    price: number;
-    image: string;
+export interface CartItem extends Product {
     quantity: number;
+    // The 'image' property is now guaranteed to be a string
+    image: string; 
 }
 
-// --- MODIFICATION 1: Update the addToCart type signature ---
 interface CartContextType {
     cartItems: CartItem[];
     cartCount: number;
-    addToCart: (product: { id: string; name: string; price: number; image: string; quantity?: number }) => void;
+    addToCart: (product: Product) => void;
     decreaseQuantity: (productId: string) => void;
     removeFromCart: (productId: string) => void;
     clearCart: () => void;
@@ -24,75 +22,78 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-type CartChange = 
-  | { type: 'added' | 'updated' | 'decreased' | 'removed'; item: { id: string; name: string, quantity: number } }
-  | { type: 'cleared' }
-  | null;
-
 export function CartProvider({ children }: { children: ReactNode }) {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
-    const [lastCartChange, setLastCartChange] = useState<CartChange>(null);
 
-    // --- MODIFICATION 2: Update the addToCart function logic ---
-    const addToCart = (product: { id: string; name: string; price: number; image: string; quantity?: number }) => {
-        // Default to adding 1 item, but use provided quantity if it exists
-        const addQuantity = product.quantity || 1;
-        
+    useEffect(() => {
+        try {
+            const storedCart = localStorage.getItem('vijaya_cart');
+            if (storedCart) setCartItems(JSON.parse(storedCart));
+        } catch (error) {
+            localStorage.removeItem('vijaya_cart');
+        }
+    }, []);
+
+    const saveCart = useCallback((cart: CartItem[]) => {
+        setCartItems(cart);
+        localStorage.setItem('vijaya_cart', JSON.stringify(cart));
+    }, []);
+
+    const addToCart = (product: Product) => {
         const existingItem = cartItems.find(item => item.id === product.id);
-        
+        let newCart: CartItem[];
+
         if (existingItem) {
-            setCartItems(prev => prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + addQuantity } : item));
-            setLastCartChange({ item: { ...product, quantity: addQuantity }, type: 'updated' });
+            newCart = cartItems.map(item =>
+                item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+            );
+            toast.success(`${product.name} quantity updated!`, { id: product.id });
         } else {
-            setCartItems(prev => [...prev, { ...product, quantity: addQuantity }]);
-            setLastCartChange({ item: { ...product, quantity: addQuantity }, type: 'added' });
+            // --- THIS IS THE FIX ---
+            // Safely get the image URL before creating the new cart item.
+            const image = (product.images && product.images.length > 0)
+                ? product.images[0]
+                : '/placeholder.png'; // Fallback
+            
+            const newItem: CartItem = {
+                ...product,
+                image, // Use the safe image variable
+                quantity: 1
+            };
+            newCart = [...cartItems, newItem];
+            toast.success(`${product.name} added to cart!`, { id: product.id });
         }
+        saveCart(newCart);
     };
-
+    
     const decreaseQuantity = (productId: string) => {
-        const itemToDecrease = cartItems.find(item => item.id === productId);
-        if (!itemToDecrease) return;
+        const existingItem = cartItems.find(item => item.id === productId);
+        if (!existingItem) return;
 
-        if (itemToDecrease.quantity === 1) {
-            removeFromCart(productId);
+        let newCart: CartItem[];
+        if (existingItem.quantity === 1) {
+            newCart = cartItems.filter(item => item.id !== productId);
+            toast.error(`${existingItem.name} removed from cart!`, { id: productId });
         } else {
-            setCartItems(prev => prev.map(item => item.id === productId ? { ...item, quantity: item.quantity - 1 } : item));
-            // No toast for decreasing to avoid being too noisy
+            newCart = cartItems.map(item =>
+                item.id === productId ? { ...item, quantity: item.quantity - 1 } : item
+            );
         }
+        saveCart(newCart);
     };
 
     const removeFromCart = (productId: string) => {
         const itemToRemove = cartItems.find(item => item.id === productId);
         if (!itemToRemove) return;
-        setCartItems(prev => prev.filter(item => item.id !== productId));
-        setLastCartChange({ item: { ...itemToRemove, quantity: 0 }, type: 'removed' });
+        const newCart = cartItems.filter(item => item.id !== productId);
+        saveCart(newCart);
+        toast.error(`${itemToRemove.name} removed from cart!`, { id: productId });
     };
 
     const clearCart = () => {
-        setCartItems([]);
-        setLastCartChange({ type: 'cleared' });
+        saveCart([]);
+        // Optional: Toast for clearing cart can be added here if desired
     };
-
-    // This useEffect handles all toast notifications
-    useEffect(() => {
-        if (!lastCartChange) return;
-
-        if (lastCartChange.type === 'cleared') {
-            toast.success("Your cart has been cleared.", { id: 'cart-cleared' });
-        } else {
-            const { item, type } = lastCartChange;
-            const toastId = `toast-${item.id}`;
-            if (type === 'added') {
-                toast.success(`${item.name} (${item.quantity > 1 ? `x${item.quantity}`:''}) added to cart!`, { id: toastId });
-            } else if (type === 'updated') {
-                toast.success(`${item.name} quantity updated!`, { id: toastId });
-            } else if (type === 'removed') {
-                toast.error(`${item.name} removed from cart!`, { id: toastId });
-            }
-        }
-        
-        setLastCartChange(null);
-    }, [lastCartChange]);
 
     const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 

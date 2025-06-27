@@ -272,14 +272,42 @@ export default function CheckoutPage() {
     return (
         <div className="bg-stone-50">
             <div className="max-w-4xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-                <h1 className="text-3xl font-bold text-brand-dark mb-8 text-center">Checkout</h1>
+                <h1 className="text-3xl font-bold text-stone-700 mb-8 text-center">Checkout</h1>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
                     {/* Shipping Details Form ... same as before ... */}
-                    <div className="md:col-span-1">...</div>
+                    <div className="md:col-span-1">
+                        <h2 className="text-xl font-semibold text-stone-700 mb-4">Shipping Information</h2>
+                         <div className="space-y-4">
+                            <div>
+                                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
+                                 <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 sm:text-sm p-2" />
+                             </div>
+                             <div>
+                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                                 <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 sm:text-sm p-2" />
+                             </div>
+                             <div>
+                                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
+                                 <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 sm:text-sm p-2" />
+                             </div>
+                             <div>
+                                 <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
+                                 <input type="text" id="address" value={address} onChange={(e) => setAddress(e.target.value)} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 sm:text-sm p-2" />
+                             </div>
+                             <div>
+                                 <label htmlFor="city" className="block text-sm font-medium text-gray-700">City</label>
+                                 <input type="text" id="city" value={city} onChange={(e) => setCity(e.target.value)} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 sm:text-sm p-2" />
+                             </div>
+                             <div>
+                                 <label htmlFor="pincode" className="block text-sm font-medium text-gray-700">Pincode</label>
+                                 <input type="text" id="pincode" value={pincode} onChange={(e) => setPincode(e.target.value)} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 sm:text-sm p-2" />
+                             </div>
+                         </div>
+                    </div>
                     
                     {/* Order Summary */}
                     <div className="md:col-span-1 mt-10 md:mt-0">
-                        <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+                        <h2 className="text-xl text-stone-700 font-semibold mb-4">Order Summary</h2>
                         <div className="border border-stone-200 rounded-lg p-4 bg-white">
                             <ul> {/* ... cartItems map ... */} </ul>
                             <div className="border-t border-stone-200 mt-4 pt-4 space-y-2">
@@ -294,14 +322,14 @@ export default function CheckoutPage() {
 
                                 <div className="flex justify-between text-stone-600"><p>Shipping</p><p>{appliedCoupon?.discountType === 'FREE_SHIPPING' ? 'FREE' : 'Calculated later'}</p></div>
                                 
-                                <div className="flex justify-between font-bold text-lg mt-2 border-t pt-2"><p>Total</p><p>{formatPrice(totalAmount)}</p></div>
+                                <div className="flex justify-between text-stone-600 font-bold text-lg mt-2 border-t pt-2"><p>Total</p><p>{formatPrice(totalAmount)}</p></div>
                             </div>
 
                             {/* Coupon Input */}
                             <div className="mt-6">
                                 <label htmlFor="coupon-code" className="block text-sm font-medium text-stone-700">Coupon Code</label>
                                 <div className="mt-1 flex rounded-md shadow-sm">
-                                    <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="VIJAYAFS" className="block w-full rounded-l-md border-stone-300 focus:ring-amber-500 focus:border-amber-500" />
+                                    <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="VIJAYAFS" className="block w-full rounded-l-md border-stone-300 text-stone-700 focus:ring-amber-500 focus:border-amber-500" />
                                     <button type="button" onClick={handleApplyCoupon} disabled={couponLoading} className="bg-stone-200 px-4 text-sm font-medium text-stone-700 rounded-r-md hover:bg-stone-300 disabled:opacity-50">
                                         {couponLoading ? '...' : 'Apply'}
                                     </button>

@@ -1,89 +1,66 @@
 // app/page.tsx
 import HeroSlider from "@/components/HeroSlider";
-import StatsSection from "@/components/StatsSection";
+import ValueProposition from "@/components/IntroSection";
 import ProductCard, { type Product } from "@/components/ProductCard";
+import Categories from "@/components/Categories";
+import WhyChooseUs from "@/components/WhyChooseUs";
+import Testimonials from "@/components/Testimonials";
+import Newsletter from "@/components/Newsletter";
 import Link from "next/link";
 
-/**
- * This is an async Server Component function that fetches product data.
- */
+// This function fetches only your featured products for the homepage section
 async function getFeaturedProducts(): Promise<Product[]> {
   try {
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'http://localhost:3000';
-    
-    const res = await fetch(`${baseUrl}/api/products`, { 
-      cache: 'no-store' 
-    });
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch products: ${res.statusText}`);
-    }
-    
-    // --- THIS IS THE FIX ---
-    // The API returns an object { products: [...] }, so we destructure it.
-    const { products: allProducts } = await res.json();
-    // --- END OF FIX ---
-
-    // Ensure allProducts is an array before filtering
-    if (!Array.isArray(allProducts)) {
-        console.error("[HOME_PAGE_ERROR] Fetched data is not an array:", allProducts);
-        return [];
-    }
-
-    // Filter the products to find only those marked as "featured"
-    const featuredProducts = allProducts.filter(p => p.isFeatured);
-    
-    return featuredProducts;
+    const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/products`, { cache: 'no-store' });
+    if (!res.ok) throw new Error("Failed to fetch products");
+    const allProducts: Product[] = await res.json();
+    return allProducts.filter(p => p.isFeatured).slice(0, 4); // Show only the first 4 featured
   } catch (error) {
-    console.error("[HOME_PAGE_ERROR] Could not fetch featured products:", error);
+    console.error("[HOME_PAGE_ERROR]", error);
     return [];
   }
 }
-
 
 export default async function HomePage() {
   const featuredProducts = await getFeaturedProducts();
 
   return (
-    <div>
+    <div className="bg-white">
+      {/* Your existing hero section */}
       <HeroSlider />
-      <section className="bg-white py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
-              Our Featured Collection
-            </h2>
-            <p className="mt-4 text-lg leading-8 text-stone-600">
-              Hand-picked selections of our finest products. Taste and Eat!
+
+      {/* The small bar with "Free Delivery", "Quality Assured", etc. */}
+      <ValueProposition />
+
+      {/* Featured Products Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Products</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Our handpicked selection of finest products, loved by thousands of customers.
             </p>
           </div>
-
-          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-y-16 gap-x-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-4">
-            {featuredProducts.length > 0 ? (
-              featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))
-            ) : (
-              <p className="text-center col-span-full text-stone-500">
-                Featured products are currently unavailable. Please check back later.
-              </p>
-            )}
-          </div>
-
-          <div className="mt-16 text-center">
-            <Link 
-              href="/products/all"
-              className="rounded-md bg-amber-500 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-amber-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 transition-colors"
-            >
-              View All Products
-            </Link>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
         </div>
       </section>
-            <StatsSection />
-
+      
+      {/* Shop by Category Section */}
+      <Categories />
+      
+      {/* Why Choose Us Section */}
+      <WhyChooseUs />
+      
+      {/* Testimonials Section */}
+      <Testimonials />
+      
+      {/* Newsletter Section */}
+      <Newsletter />
     </div>
   );
 }
